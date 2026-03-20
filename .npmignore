@@ -1,0 +1,21 @@
+# Source — consumers use the compiled dist/
+src/
+
+# Tests
+tests/
+*.test.ts
+*.spec.ts
+
+# Benchmarks
+bench/
+
+# CI / tooling config
+.github/
+.vscode/
+tsconfig.json
+vitest.config.ts
+
+# Local dev
+.env
+*.log
+node_modules/
