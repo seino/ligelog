@@ -5,21 +5,18 @@
  * Import everything from `'ligelog'`:
  *
  * ```ts
- * import { createLogger, FileTransport, createSentryHook } from 'ligelog'
+ * import { createLogger, FileTransport } from 'ligelog'
  * ```
  *
  * @module ligelog
  */
 
 // Core classes
-export { Logger }           from './logger'
+export { Logger } from './logger';
 
 // Transports
-export { StdoutTransport }  from './transports/stdout'
-export { FileTransport }    from './transports/file'
-
-// Integrations
-export { createSentryHook } from './transports/sentry'
+export { StdoutTransport } from './transports/stdout';
+export { FileTransport } from './transports/file';
 
 // Types — exported for consumers who extend ligelog
 export type {
@@ -33,21 +30,20 @@ export type {
   SerializeHook,
   AfterWriteHook,
   LoggerOptions,
-} from './types'
+} from './types';
 
-export type { FileTransportOptions }  from './transports/file'
-export type { SentryHookOptions, SentryLike } from './transports/sentry'
+export type { FileTransportOptions } from './transports/file';
 
 // Re-export the LEVELS map so consumers can do numeric comparisons
-export { LEVELS } from './types'
+export { LEVELS } from './types';
 
 // ---------------------------------------------------------------------------
 // Convenience factory
 // ---------------------------------------------------------------------------
 
-import { Logger }          from './logger'
-import { StdoutTransport } from './transports/stdout'
-import type { LoggerOptions } from './types'
+import { Logger } from './logger';
+import { StdoutTransport } from './transports/stdout';
+import type { LoggerOptions } from './types';
 
 /**
  * Create a new `Logger` with sensible defaults.
@@ -70,9 +66,6 @@ import type { LoggerOptions } from './types'
  *   ],
  * })
  *
- * // Attach Sentry after construction
- * logger.use(createSentryHook({ sentry: Sentry }))
- *
  * // Graceful shutdown
  * process.on('beforeExit', () => logger.flush())
  * ```
@@ -81,6 +74,6 @@ import type { LoggerOptions } from './types'
  * @returns A configured `Logger` instance.
  */
 export function createLogger(opts: LoggerOptions = {}): Logger {
-  const transports = opts.transports ?? [new StdoutTransport()]
-  return new Logger({ ...opts, transports })
+  const transports = opts.transports ?? [new StdoutTransport()];
+  return new Logger({ ...opts, transports });
 }

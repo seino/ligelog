@@ -6,7 +6,7 @@
 - Custom NDJSON serializer for predictable output and low overhead
 - Non-blocking async ring-buffer queue (`queueMicrotask`)
 - Hook pipeline: `onBeforeWrite` → `onSerialize` → `onAfterWrite`
-- First-class Sentry integration via `createSentryHook`
+- Ecosystem architecture — extend via `@ligelog/*` packages
 - ESM + CJS dual build
 
 ## Positioning
@@ -46,12 +46,6 @@ If you need proven highest-throughput logging under many workloads, benchmark ag
 
 ```sh
 npm install ligelog
-```
-
-Sentry integration requires `@sentry/node` (or any compatible SDK) as a peer dependency:
-
-```sh
-npm install @sentry/node
 ```
 
 ---
@@ -218,11 +212,25 @@ logger.use({
 
 ---
 
-## Sentry integration
+## Ecosystem
+
+ligelog uses an ecosystem architecture. The core package stays small and fast, while integrations are provided as separate `@ligelog/*` packages.
+
+| Package | Description |
+|---------|-------------|
+| [`ligelog`](./packages/core) | Core logger — zero dependencies |
+| [`@ligelog/sentry`](./packages/sentry) | Sentry integration via `onAfterWrite` hook |
+
+### Sentry integration
+
+```sh
+npm install @ligelog/sentry @sentry/node
+```
 
 ```ts
 import * as Sentry from '@sentry/node'
-import { createLogger, createSentryHook } from 'ligelog'
+import { createLogger } from 'ligelog'
+import { createSentryHook } from '@ligelog/sentry'
 
 Sentry.init({ dsn: process.env.SENTRY_DSN })
 
@@ -230,23 +238,13 @@ const logger = createLogger({ level: 'info' })
 
 logger.use(createSentryHook({
   sentry:        Sentry,
-  minLevel:      'error',   // only forward error and fatal
-  captureErrors: true,      // use captureException when an Error is present
-  breadcrumbs:   true,      // also add Sentry breadcrumbs
+  minLevel:      'error',
+  captureErrors: true,
+  breadcrumbs:   true,
 }))
-
-// Error objects in extra fields are forwarded via captureException.
-logger.error('db connection failed', { error: new Error('ECONNREFUSED') })
 ```
 
-### `createSentryHook` options
-
-| Option          | Type         | Default  | Description                                                           |
-|-----------------|--------------|----------|-----------------------------------------------------------------------|
-| `sentry`        | `SentryLike` | —        | Initialized Sentry SDK instance.                                      |
-| `minLevel`      | `LevelName`  | `'warn'` | Entries below this level are ignored by the hook.                     |
-| `captureErrors` | `boolean`    | `true`   | Use `captureException` when an `Error` is found in the extra fields.  |
-| `breadcrumbs`   | `boolean`    | `true`   | Also add Sentry breadcrumbs for timeline context.                     |
+See [`@ligelog/sentry` README](./packages/sentry) for full options.
 
 ---
 

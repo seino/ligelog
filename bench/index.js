@@ -12,7 +12,7 @@
  */
 
 import pino from 'pino'
-import { createLogger } from '../dist/index.js'
+import { createLogger } from '../packages/core/dist/index.js'
 
 class NullTransport {
   write(_line, _record) {}

@@ -1,0 +1,56 @@
+{
+  "name": "ligelog",
+  "version": "0.1.0",
+  "description": "Lightweight, fast, hook-based JSON logger for Node.js",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./hooks": {
+      "types": "./dist/hooks.d.ts",
+      "import": "./dist/hooks.js",
+      "require": "./dist/hooks.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/hooks.ts --format esm,cjs --dts --clean",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "logger",
+    "logging",
+    "json",
+    "ndjson",
+    "fast",
+    "lightweight",
+    "nodejs",
+    "typescript",
+    "structured-logging"
+  ],
+  "author": "Akihiro Seino",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seino/ligelog.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/seino/ligelog#readme",
+  "bugs": {
+    "url": "https://github.com/seino/ligelog/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

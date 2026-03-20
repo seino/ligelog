@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- Migrated to pnpm workspaces monorepo structure.
+- `createSentryHook` has been moved to the `@ligelog/sentry` package. Install it separately: `npm install @ligelog/sentry`.
+- `SentryHookOptions` and `SentryLike` types are now exported from `@ligelog/sentry` instead of `ligelog`.
+
 ### Changed
 
 - `Logger.flush()` now waits for queue drain and transport-level `flush()` hooks.

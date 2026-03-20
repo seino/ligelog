@@ -1,0 +1,52 @@
+{
+  "name": "@ligelog/sentry",
+  "version": "0.1.0",
+  "description": "Sentry integration hook for ligelog",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "ligelog",
+    "sentry",
+    "logging",
+    "hook"
+  ],
+  "author": "Akihiro Seino",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seino/ligelog.git",
+    "directory": "packages/sentry"
+  },
+  "homepage": "https://github.com/seino/ligelog#ecosystem",
+  "bugs": {
+    "url": "https://github.com/seino/ligelog/issues"
+  },
+  "devDependencies": {
+    "ligelog": "workspace:*"
+  },
+  "peerDependencies": {
+    "ligelog": ">=0.1.0",
+    "@sentry/node": ">=7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

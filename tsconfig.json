@@ -1,20 +1,7 @@
 {
-  "compilerOptions": {
-    "target":           "ES2022",
-    "module":           "ESNext",
-    "moduleResolution": "Bundler",
-    "lib":              ["ES2022", "DOM"],
-    "types":            ["node"],
-    "strict":           true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess":   true,
-    "declaration":      true,
-    "declarationMap":   true,
-    "sourceMap":        true,
-    "outDir":           "./dist",
-    "rootDir":          "./src",
-    "skipLibCheck":     true
-  },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "tests", "bench"]
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/sentry" }
+  ],
+  "files": []
 }
