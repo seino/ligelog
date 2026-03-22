@@ -219,7 +219,84 @@ ligelog uses an ecosystem architecture. The core package stays small and fast, w
 | Package | Description |
 |---------|-------------|
 | [`ligelog`](./packages/core) | Core logger — zero dependencies |
+| [`@ligelog/caller`](./packages/caller) | Auto-attach caller file, line, and function name |
+| [`@ligelog/catch`](./packages/catch) | Wrap functions with automatic error logging |
+| [`@ligelog/pretty`](./packages/pretty) | Colorized human-readable output for development |
+| [`@ligelog/rotate`](./packages/rotate) | Size and time-based log file rotation |
 | [`@ligelog/sentry`](./packages/sentry) | Sentry integration via `onAfterWrite` hook |
+
+### Caller info
+
+```sh
+npm install @ligelog/caller
+```
+
+```ts
+import { createLogger } from 'ligelog'
+import { createCallerHook } from '@ligelog/caller'
+
+const logger = createLogger({ level: 'debug' })
+logger.use(createCallerHook())
+
+logger.info('hello') // => record includes caller_file, caller_line, caller_fn
+```
+
+### Error catching
+
+```sh
+npm install @ligelog/catch
+```
+
+```ts
+import { createLogger } from 'ligelog'
+import { catchWith, catchAsync } from '@ligelog/catch'
+
+const logger = createLogger()
+
+const safeParseJson = catchWith(logger, JSON.parse, { rethrow: false })
+safeParseJson('invalid') // => logs error, returns undefined
+
+const safeFetch = catchAsync(logger, fetchData, { rethrow: false })
+await safeFetch('/api') // => logs error on reject, returns undefined
+```
+
+### Pretty output
+
+```sh
+npm install @ligelog/pretty
+```
+
+```ts
+import { createLogger } from 'ligelog'
+import { PrettyTransport } from '@ligelog/pretty'
+
+const logger = createLogger({
+  transports: [new PrettyTransport()],
+})
+// Output: 2024-01-15 09:13:20.123 | INFO  | server started  port=3000
+```
+
+### Log rotation
+
+```sh
+npm install @ligelog/rotate
+```
+
+```ts
+import { createLogger } from 'ligelog'
+import { RotateTransport } from '@ligelog/rotate'
+
+const logger = createLogger({
+  transports: [
+    new RotateTransport({
+      path: './logs/app.log',
+      maxSize: '50MB',
+      rotateInterval: 'daily',
+      maxFiles: 30,
+    }),
+  ],
+})
+```
 
 ### Sentry integration
 
@@ -296,6 +373,8 @@ Factory function. Returns a `Logger` instance.
 | `transports` | `Transport[]` | `[StdoutTransport]`|
 | `hooks`      | `Hooks`       | `{}`               |
 | `queueSize`  | `number`      | `8192`             |
+| `onHookError` | `(phase, error) => void` | —     |
+| `onDrop`     | `(dropped) => void` | —           |
 
 ### `logger.child(ctx)`
 
