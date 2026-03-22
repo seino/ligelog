@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-03-21
 
 ### Breaking Changes
 
@@ -49,6 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `Logger.close()` for graceful shutdown (`flush` + transport `close`).
 - Added issue templates and a pull request template for reproducible reports.
 - Added `Logger.getWriteErrors()` for transport failure observability.
+
+### New Packages
+
+- **`@ligelog/caller`** — Hook that auto-attaches caller file, line, and function name to log records via `Error.captureStackTrace`. Supports `minLevel` filtering and `pathStyle` options (`basename` / `full` / `relative`).
+- **`@ligelog/catch`** — Higher-order functions (`catchWith`, `catchAsync`) that wrap sync/async functions with automatic error logging. Inspired by Loguru's `@logger.catch` decorator.
+- **`@ligelog/pretty`** — Colorized, human-readable console transport for development. Loguru-inspired output format with ANSI codes (zero deps), `NO_COLOR` support, and `@ligelog/caller` integration.
+- **`@ligelog/rotate`** — File rotation transport with size-based and time-based triggers, configurable retention (`maxFiles`), and `timestamp` / `numeric` naming schemes.
 
 ## [0.1.0] - 2024-01-01
 

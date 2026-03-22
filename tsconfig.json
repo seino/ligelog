@@ -1,7 +1,11 @@
 {
   "references": [
     { "path": "packages/core" },
-    { "path": "packages/sentry" }
+    { "path": "packages/sentry" },
+    { "path": "packages/caller" },
+    { "path": "packages/catch" },
+    { "path": "packages/pretty" },
+    { "path": "packages/rotate" }
   ],
   "files": []
 }

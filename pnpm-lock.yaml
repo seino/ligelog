@@ -24,7 +24,31 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@25.5.0)
 
+  packages/caller:
+    devDependencies:
+      ligelog:
+        specifier: workspace:*
+        version: link:../core
+
+  packages/catch:
+    devDependencies:
+      ligelog:
+        specifier: workspace:*
+        version: link:../core
+
   packages/core: {}
+
+  packages/pretty:
+    devDependencies:
+      ligelog:
+        specifier: workspace:*
+        version: link:../core
+
+  packages/rotate:
+    devDependencies:
+      ligelog:
+        specifier: workspace:*
+        version: link:../core
 
   packages/sentry:
     dependencies:

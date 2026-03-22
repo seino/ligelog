@@ -36,6 +36,7 @@
  */
 
 import type { Hooks, LogRecord } from 'ligelog';
+import { LEVELS } from 'ligelog';
 
 // ---------------------------------------------------------------------------
 // Minimal Sentry interface
@@ -104,13 +105,7 @@ const SENTRY_LEVELS: Record<string, string> = {
 const toSentryLevel = (lvl: string): string => SENTRY_LEVELS[lvl] ?? 'info';
 
 /** Numeric level map used for threshold comparison. */
-const NUMERIC: Record<string, number> = {
-  debug: 10,
-  info: 20,
-  warn: 30,
-  error: 40,
-  fatal: 50,
-};
+const NUMERIC = LEVELS;
 
 /**
  * Strip the fixed LogRecord fields and return only the user-supplied context.

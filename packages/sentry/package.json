@@ -1,6 +1,6 @@
 {
   "name": "@ligelog/sentry",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Sentry integration hook for ligelog",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -15,7 +15,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
@@ -43,7 +44,7 @@
     "ligelog": "workspace:*"
   },
   "peerDependencies": {
-    "ligelog": ">=0.1.0",
+    "ligelog": ">=1.0.0",
     "@sentry/node": ">=7"
   },
   "engines": {

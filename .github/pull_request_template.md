@@ -17,9 +17,9 @@
 
 ## Validation
 
-- [ ] `npm run lint`
-- [ ] `npm test`
-- [ ] `npm run bench:compare` (if perf-related)
+- [ ] `pnpm run lint`
+- [ ] `pnpm run test`
+- [ ] `pnpm run bench:compare` (if perf-related)
 
 ## Benchmark details (if perf-related)
 
