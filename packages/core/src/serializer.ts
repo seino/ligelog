@@ -85,7 +85,7 @@ function encodeValueInternal(v: unknown, state: EncodeState, depth: number): str
     case 'bigint':  return encodeStr(String(v))
     case 'string':  return encodeStr(v)
     case 'object': {
-      if (v instanceof Date)   return Number.isFinite(v.getTime()) ? encodeStr(v.toISOString()) : 'null'
+      if (v instanceof Date)   return Number.isFinite(v.getTime()) ? encodeStr(v.toISOString()) : encodeStr('[Invalid Date]')
       if (depth >= MAX_DEPTH)  return encodeStr(MAX_DEPTH_MARKER)
       if (state.seen.has(v))   return encodeStr(CIRCULAR_MARKER)
       state.seen.add(v)
@@ -148,6 +148,9 @@ function encodeObject(obj: Record<string, unknown>, state: EncodeState, depth: n
 /** Zero-pad a single-digit number to two digits without string allocation. */
 const p2 = (n: number): string => (n < 10 ? '0' + n : '' + n)
 
+/** Zero-pad a number to three digits for milliseconds. */
+const p3 = (n: number): string => (n < 10 ? '00' + n : n < 100 ? '0' + n : '' + n)
+
 // ---------------------------------------------------------------------------
 // Main serializer
 // ---------------------------------------------------------------------------
@@ -177,17 +180,23 @@ export function serialize(record: LogRecord): string {
       p2(d.getUTCDate())            + 'T' +
       p2(d.getUTCHours())           + ':' +
       p2(d.getUTCMinutes())         + ':' +
-      p2(d.getUTCSeconds())         + 'Z"' +
+      p2(d.getUTCSeconds())         + '.' +
+      p3(d.getUTCMilliseconds())    + 'Z"' +
     ',"level":'  + level +
     ',"lvl":"'   + lvl   + '"' +
     ',"pid":'    + pid   +
     ',"msg":'    + encodeStr(msg)
 
   // Append arbitrary context fields spread from the caller.
+  // Share a single EncodeState across all fields to avoid per-field WeakSet
+  // allocation and to detect circular references across fields.
   const keys = Object.keys(rest)
-  for (let i = 0; i < keys.length; i++) {
-    const k = keys[i] ?? ''
-    out += ',' + encodeStr(k) + ':' + encodeValue(rest[k])
+  if (keys.length > 0) {
+    const state: EncodeState = { seen: new WeakSet<object>() }
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i] ?? ''
+      out += ',' + encodeStr(k) + ':' + encodeValueInternal(rest[k], state, 0)
+    }
   }
 
   return out + '}\n'

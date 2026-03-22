@@ -63,6 +63,11 @@ describe('encodeValue', () => {
     expect(encodeValue(d)).toBe('"2024-01-01T00:00:00.000Z"')
   })
 
+  it('encodes Invalid Date as "[Invalid Date]"', () => {
+    const d = new Date('invalid')
+    expect(encodeValue(d)).toBe('"[Invalid Date]"')
+  })
+
   it('encodes strings with proper escaping', () => {
     expect(encodeValue('hello')).toBe('"hello"')
     expect(encodeValue('say "hi"')).toBe('"say \\"hi\\""')
@@ -159,7 +164,7 @@ describe('serialize', () => {
   it('includes an ISO-8601 timestamp in the iso field', () => {
     const out = parse(makeRecord())
     expect(typeof out.iso).toBe('string')
-    expect((out.iso as string)).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+    expect((out.iso as string)).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/)
   })
 
   it('spreads extra context fields into the output', () => {
