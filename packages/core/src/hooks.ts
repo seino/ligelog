@@ -26,15 +26,18 @@ import type { Hooks, HookContext } from './types'
 export function runHooks(
   hooks: Hooks,
   ctx: HookContext,
-  options: { skipAfterWrite?: boolean } = {},
+  options: {
+    skipAfterWrite?: boolean | undefined
+    onHookError?: ((phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void) | undefined
+  } = {},
 ): HookContext | null {
   // Phase 1 — onBeforeWrite: may mutate or drop the record.
   for (const fn of hooks.onBeforeWrite ?? []) {
     let result: HookContext | false
     try {
       result = fn(ctx)
-    } catch {
-      // Hook failures must not crash app code; drop this entry.
+    } catch (e) {
+      options.onHookError?.('onBeforeWrite', e)
       return null
     }
     if (result === false) return null  // entry dropped
@@ -45,15 +48,19 @@ export function runHooks(
   for (const fn of hooks.onSerialize ?? []) {
     try {
       ctx = fn(ctx)
-    } catch {
-      // Keep prior ctx and continue to default serializer path.
+    } catch (e) {
+      options.onHookError?.('onSerialize', e)
     }
   }
 
   // Phase 3 — onAfterWrite: side-effects only, return value is ignored.
   if (!options.skipAfterWrite) {
     for (const fn of hooks.onAfterWrite ?? []) {
-      fn(ctx)
+      try {
+        fn(ctx)
+      } catch (e) {
+        options.onHookError?.('onAfterWrite', e)
+      }
     }
   }
 
@@ -64,12 +71,16 @@ export function runHooks(
  * Execute only `onAfterWrite` hooks for a previously processed context.
  * This is used by Logger after the entry has been enqueued.
  */
-export function runAfterWriteHooks(hooks: Hooks, ctx: HookContext): void {
+export function runAfterWriteHooks(
+  hooks: Hooks,
+  ctx: HookContext,
+  onHookError?: (phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void,
+): void {
   for (const fn of hooks.onAfterWrite ?? []) {
     try {
       fn(ctx)
-    } catch {
-      // Side-effect hook failures are isolated by design.
+    } catch (e) {
+      onHookError?.('onAfterWrite', e)
     }
   }
 }

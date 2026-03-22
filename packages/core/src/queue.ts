@@ -62,17 +62,19 @@ export class AsyncQueue {
   private          dropped = 0      // total entries discarded due to back-pressure
   private          writeErrors = 0  // total transport write failures
   private readonly drainWaiters: Array<() => void> = []
+  private readonly onDrop: ((dropped: number) => void) | undefined
 
   /** Transports are exposed so child loggers can share the same queue. */
   readonly transports: Transport[]
 
-  constructor(transports: Transport[], size = DEFAULT_SIZE) {
+  constructor(transports: Transport[], size = DEFAULT_SIZE, onDrop?: ((dropped: number) => void) | undefined) {
     if (!Number.isInteger(size) || size < 2 || (size & (size - 1)) !== 0) {
       throw new Error('AsyncQueue size must be a power of 2 and >= 2')
     }
     this.buf = new Array<QueueEntry>(size)
     this.mask = size - 1
     this.transports = transports
+    this.onDrop = onDrop
   }
 
   // -------------------------------------------------------------------------
@@ -92,6 +94,7 @@ export class AsyncQueue {
     if (next === this.tail) {
       // Ring buffer full — drop and count.
       this.dropped++
+      this.onDrop?.(this.dropped)
       return
     }
     this.buf[this.head] = { line, record }

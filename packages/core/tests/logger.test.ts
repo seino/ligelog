@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Logger }          from '../src/logger'
 import { createLogger }    from '../src/index'
-import type { Transport, LogRecord, Hooks } from '../src/types'
+import type { Transport, LogRecord } from '../src/types'
 
 // ---------------------------------------------------------------------------
 // In-memory transport for testing
@@ -250,5 +250,105 @@ describe('Logger — use() and hooks', () => {
     logger.info('b')
     await logger.flush()
     expect(logger.getWriteErrors()).toBe(2)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// onHookError callback
+// ---------------------------------------------------------------------------
+
+describe('Logger — onHookError callback', () => {
+  it('reports onBeforeWrite hook errors', async () => {
+    const mem = new MemoryTransport()
+    const onHookError = vi.fn()
+    const logger = createLogger({
+      transports: [mem],
+      hooks: { onBeforeWrite: [() => { throw new Error('before fail') }] },
+      onHookError,
+    })
+
+    logger.info('test')
+    await flush(logger)
+
+    expect(onHookError).toHaveBeenCalledWith('onBeforeWrite', expect.any(Error))
+    expect(mem.records).toHaveLength(0)
+  })
+
+  it('reports onSerialize hook errors', async () => {
+    const mem = new MemoryTransport()
+    const onHookError = vi.fn()
+    const logger = createLogger({
+      transports: [mem],
+      hooks: { onSerialize: [() => { throw new Error('serialize fail') }] },
+      onHookError,
+    })
+
+    logger.info('test')
+    await flush(logger)
+
+    expect(onHookError).toHaveBeenCalledWith('onSerialize', expect.any(Error))
+    expect(mem.records).toHaveLength(1)
+  })
+
+  it('reports onAfterWrite hook errors', async () => {
+    const mem = new MemoryTransport()
+    const onHookError = vi.fn()
+    const logger = createLogger({
+      transports: [mem],
+      hooks: { onAfterWrite: [() => { throw new Error('after fail') }] },
+      onHookError,
+    })
+
+    logger.info('test')
+    await flush(logger)
+
+    expect(onHookError).toHaveBeenCalledWith('onAfterWrite', expect.any(Error))
+    expect(mem.records).toHaveLength(1)
+  })
+
+  it('is not called when no hooks throw', async () => {
+    const mem = new MemoryTransport()
+    const onHookError = vi.fn()
+    const logger = createLogger({ transports: [mem], onHookError })
+
+    logger.info('ok')
+    await flush(logger)
+
+    expect(onHookError).not.toHaveBeenCalled()
+  })
+
+  it('is inherited by child loggers', async () => {
+    const mem = new MemoryTransport()
+    const onHookError = vi.fn()
+    const parent = createLogger({
+      transports: [mem],
+      hooks: { onBeforeWrite: [() => { throw new Error('child fail') }] },
+      onHookError,
+    })
+    const child = parent.child({ scope: 'child' })
+
+    child.info('test')
+    await child.flush()
+
+    expect(onHookError).toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// child() level inheritance
+// ---------------------------------------------------------------------------
+
+describe('Logger — child() level inheritance', () => {
+  it('child inherits the parent level correctly', async () => {
+    const mem = new MemoryTransport()
+    const parent = createLogger({ level: 'error', transports: [mem] })
+    const child = parent.child({ scope: 'child' })
+
+    child.warn('should be dropped')
+    child.error('should pass')
+    await child.flush()
+
+    expect(mem.records).toHaveLength(1)
+    expect(mem.records[0]?.lvl).toBe('error')
   })
 })

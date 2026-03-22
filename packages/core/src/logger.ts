@@ -58,12 +58,14 @@ export class Logger {
   private readonly context:  Record<string, unknown>
   private          hooks:    Hooks
   private readonly queue:    AsyncQueue
+  private readonly onHookError: ((phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void) | undefined
 
   constructor(opts: LoggerOptions = {}, queue?: AsyncQueue) {
-    this.minLevel = LEVELS[opts.level ?? 'info']
-    this.context  = opts.context ?? {}
-    this.hooks    = opts.hooks   ?? {}
-    this.queue    = queue ?? new AsyncQueue(opts.transports ?? [], opts.queueSize)
+    this.minLevel    = LEVELS[opts.level ?? 'info']
+    this.context     = opts.context ?? {}
+    this.hooks       = opts.hooks   ?? {}
+    this.onHookError = opts.onHookError
+    this.queue       = queue ?? new AsyncQueue(opts.transports ?? [], opts.queueSize, opts.onDrop)
   }
 
   // -------------------------------------------------------------------------
@@ -129,10 +131,11 @@ export class Logger {
    */
   child(ctx: Record<string, unknown>): Logger {
     return new Logger({
-      level:      this.currentLevelName(),
-      context:    { ...this.context, ...ctx },
-      transports: this.queue.transports,
-      hooks:      this.hooks,
+      level:       this.currentLevelName(),
+      context:     { ...this.context, ...ctx },
+      transports:  this.queue.transports,
+      hooks:       mergeHooks(this.hooks, {}),
+      onHookError: this.onHookError,
     }, this.queue)
   }
 
@@ -219,20 +222,20 @@ export class Logger {
     }
 
     // Run hooks; null means the entry was dropped by an onBeforeWrite hook.
-    const ctx = runHooks(this.hooks, { record }, { skipAfterWrite: true })
+    const ctx = runHooks(this.hooks, { record }, { skipAfterWrite: true, onHookError: this.onHookError })
     if (!ctx) return
 
     // Use the hook-provided output string, or fall back to the built-in serializer.
     const line = ctx.output ?? serialize(record)
 
     this.queue.enqueue(line, record)
-    runAfterWriteHooks(this.hooks, ctx)
+    runAfterWriteHooks(this.hooks, ctx, this.onHookError)
   }
 
   /** Reverse-map the numeric minLevel back to its string name. */
   private currentLevelName(): LevelName {
     return (Object.keys(LEVELS) as LevelName[]).find(
       k => LEVELS[k] === this.minLevel,
-    )!
+    ) ?? 'info'
   }
 }

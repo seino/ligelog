@@ -165,4 +165,17 @@ export interface LoggerOptions {
    * @default 8192
    */
   queueSize?: number
+
+  /**
+   * Called when a hook throws during execution.
+   * Receives the phase name and the caught error.
+   * Useful for monitoring hook health without crashing the logger.
+   */
+  onHookError?: ((phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void) | undefined
+
+  /**
+   * Called when a log entry is dropped due to queue back-pressure.
+   * Receives the total number of dropped entries so far.
+   */
+  onDrop?: ((dropped: number) => void) | undefined
 }
