@@ -144,6 +144,55 @@ describe('Logger — use() and hooks', () => {
     expect(mem.records[0].msg).toBe('keep me')
   })
 
+  it('onBeforeWrite can replace the record with a new object (immutable update)', async () => {
+    const mem    = new MemoryTransport()
+    const logger = createLogger({ transports: [mem] })
+
+    // Simulate a PII-masking hook that returns a new record object
+    // instead of mutating ctx.record in place.
+    logger.use({
+      onBeforeWrite: [ctx => ({
+        ...ctx,
+        record: { ...ctx.record, password: '***', token: '***' },
+      })],
+    })
+
+    logger.info('login attempt', { password: 'secret123', token: 'abc' })
+    await flush(logger)
+
+    // Both the serialized line and the record handed to the transport
+    // must reflect the hook's replacement.
+    expect(mem.records).toHaveLength(1)
+    expect(mem.records[0].password).toBe('***')
+    expect(mem.records[0].token).toBe('***')
+    expect(mem.lines[0]).toContain('"password":"***"')
+    expect(mem.lines[0]).toContain('"token":"***"')
+    expect(mem.lines[0]).not.toContain('secret123')
+    expect(mem.lines[0]).not.toContain('"abc"')
+  })
+
+  it('onBeforeWrite record replacement preserves Error prototypes', async () => {
+    const mem    = new MemoryTransport()
+    const logger = createLogger({ transports: [mem] })
+
+    // Hook returns a new record where `error` is still an Error instance.
+    logger.use({
+      onBeforeWrite: [ctx => ({
+        ...ctx,
+        record: { ...ctx.record, tagged: true },
+      })],
+    })
+
+    const err = new Error('boom')
+    logger.error('failure', { error: err })
+    await flush(logger)
+
+    expect(mem.records).toHaveLength(1)
+    expect(mem.records[0].tagged).toBe(true)
+    expect(mem.records[0].error).toBeInstanceOf(Error)
+    expect((mem.records[0].error as Error).message).toBe('boom')
+  })
+
   it('onSerialize can replace the output string', async () => {
     const mem    = new MemoryTransport()
     const logger = createLogger({ transports: [mem] })
