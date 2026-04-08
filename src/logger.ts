@@ -219,13 +219,16 @@ export class Logger {
     }
 
     // Run hooks; null means the entry was dropped by an onBeforeWrite hook.
+    // Hooks may replace `ctx.record` with a new object (immutable update),
+    // so downstream serialization and transport dispatch must read from
+    // `ctx.record` rather than the original local `record`.
     const ctx = runHooks(this.hooks, { record }, { skipAfterWrite: true })
     if (!ctx) return
 
     // Use the hook-provided output string, or fall back to the built-in serializer.
-    const line = ctx.output ?? serialize(record)
+    const line = ctx.output ?? serialize(ctx.record)
 
-    this.queue.enqueue(line, record)
+    this.queue.enqueue(line, ctx.record)
     runAfterWriteHooks(this.hooks, ctx)
   }
 
