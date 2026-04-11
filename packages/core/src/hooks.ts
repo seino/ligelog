@@ -14,7 +14,7 @@
  * Hooks added via `logger.use()` are appended after those passed at construction.
  */
 
-import type { Hooks, HookContext } from './types'
+import type { Hooks, HookContext } from './types';
 
 /**
  * Execute the full hook pipeline for a single log record.
@@ -27,29 +27,29 @@ export function runHooks(
   hooks: Hooks,
   ctx: HookContext,
   options: {
-    skipAfterWrite?: boolean | undefined
-    onHookError?: ((phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void) | undefined
-  } = {},
+    skipAfterWrite?: boolean | undefined;
+    onHookError?: ((phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void) | undefined;
+  } = {}
 ): HookContext | null {
   // Phase 1 — onBeforeWrite: may mutate or drop the record.
   for (const fn of hooks.onBeforeWrite ?? []) {
-    let result: HookContext | false
+    let result: HookContext | false;
     try {
-      result = fn(ctx)
+      result = fn(ctx);
     } catch (e) {
-      options.onHookError?.('onBeforeWrite', e)
-      return null
+      options.onHookError?.('onBeforeWrite', e);
+      return null;
     }
-    if (result === false) return null  // entry dropped
-    ctx = result
+    if (result === false) return null; // entry dropped
+    ctx = result;
   }
 
   // Phase 2 — onSerialize: may replace ctx.output with a custom format.
   for (const fn of hooks.onSerialize ?? []) {
     try {
-      ctx = fn(ctx)
+      ctx = fn(ctx);
     } catch (e) {
-      options.onHookError?.('onSerialize', e)
+      options.onHookError?.('onSerialize', e);
     }
   }
 
@@ -57,14 +57,14 @@ export function runHooks(
   if (!options.skipAfterWrite) {
     for (const fn of hooks.onAfterWrite ?? []) {
       try {
-        fn(ctx)
+        fn(ctx);
       } catch (e) {
-        options.onHookError?.('onAfterWrite', e)
+        options.onHookError?.('onAfterWrite', e);
       }
     }
   }
 
-  return ctx
+  return ctx;
 }
 
 /**
@@ -74,13 +74,13 @@ export function runHooks(
 export function runAfterWriteHooks(
   hooks: Hooks,
   ctx: HookContext,
-  onHookError?: (phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void,
+  onHookError?: (phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void
 ): void {
   for (const fn of hooks.onAfterWrite ?? []) {
     try {
-      fn(ctx)
+      fn(ctx);
     } catch (e) {
-      onHookError?.('onAfterWrite', e)
+      onHookError?.('onAfterWrite', e);
     }
   }
 }
@@ -98,7 +98,7 @@ export function runAfterWriteHooks(
 export function mergeHooks(base: Hooks, extra: Hooks): Hooks {
   return {
     onBeforeWrite: [...(base.onBeforeWrite ?? []), ...(extra.onBeforeWrite ?? [])],
-    onSerialize:   [...(base.onSerialize   ?? []), ...(extra.onSerialize   ?? [])],
-    onAfterWrite:  [...(base.onAfterWrite  ?? []), ...(extra.onAfterWrite  ?? [])],
-  }
+    onSerialize: [...(base.onSerialize ?? []), ...(extra.onSerialize ?? [])],
+    onAfterWrite: [...(base.onAfterWrite ?? []), ...(extra.onAfterWrite ?? [])],
+  };
 }

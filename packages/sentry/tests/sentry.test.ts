@@ -56,7 +56,7 @@ describe('createSentryHook', () => {
 
     expect(sentry.captureException).toHaveBeenCalledWith(
       err,
-      expect.objectContaining({ extra: expect.objectContaining({ msg: 'something happened' }) }),
+      expect.objectContaining({ extra: expect.objectContaining({ msg: 'something happened' }) })
     );
     expect(sentry.captureMessage).not.toHaveBeenCalled();
   });

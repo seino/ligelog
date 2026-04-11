@@ -100,10 +100,7 @@ export interface PrettyTransportOptions {
 // ---------------------------------------------------------------------------
 
 /** Standard LogRecord keys to exclude from "extra" fields. */
-const STANDARD_KEYS = new Set([
-  'level', 'lvl', 'time', 'msg', 'pid',
-  'caller_file', 'caller_line', 'caller_fn',
-]);
+const STANDARD_KEYS = new Set(['level', 'lvl', 'time', 'msg', 'pid', 'caller_file', 'caller_line', 'caller_fn']);
 
 /** Default color functions per log level. */
 const DEFAULT_LEVEL_COLORS: Record<LevelName, (text: string) => string> = {
@@ -140,7 +137,11 @@ function formatValue(value: unknown): string {
   if (typeof value === 'string') return value;
   if (typeof value === 'object' && value !== null) {
     // JSON.stringify can throw on circular references — fall back to String().
-    try { return JSON.stringify(value); } catch { return String(value); }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
   }
   return String(value);
 }
@@ -174,11 +175,9 @@ export class PrettyTransport implements Transport {
   private readonly startTime: number;
 
   constructor(opts: PrettyTransportOptions = {}) {
-    const hasNoColor = typeof process !== 'undefined' && !!process.env['NO_COLOR'];
-    const isTTY = typeof process !== 'undefined'
-      && 'stdout' in process
-      && 'isTTY' in process.stdout
-      && !!process.stdout.isTTY;
+    const hasNoColor = typeof process !== 'undefined' && !!process.env.NO_COLOR;
+    const isTTY =
+      typeof process !== 'undefined' && 'stdout' in process && 'isTTY' in process.stdout && !!process.stdout.isTTY;
 
     this.colorize = opts.colorize ?? (isTTY && !hasNoColor);
     this.timestampStyle = opts.timestamp ?? 'local';
@@ -219,9 +218,10 @@ export class PrettyTransport implements Transport {
 
     // Caller info (if present from @ligelog/caller)
     if (record.caller_file) {
-      const callerStr = record.caller_fn && record.caller_fn !== '<anonymous>'
-        ? `${record.caller_file}:${record.caller_line}:${record.caller_fn}`
-        : `${record.caller_file}:${record.caller_line}`;
+      const callerStr =
+        record.caller_fn && record.caller_fn !== '<anonymous>'
+          ? `${record.caller_file}:${record.caller_line}:${record.caller_fn}`
+          : `${record.caller_file}:${record.caller_line}`;
       parts.push(this.colorize ? color(callerStr, COLORS.cyan!) : callerStr);
       parts.push('-');
     }

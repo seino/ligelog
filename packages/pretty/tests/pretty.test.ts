@@ -25,7 +25,9 @@ function makeRecord(overrides: Partial<LogRecord> = {}): LogRecord {
 function captureOutput(opts: ConstructorParameters<typeof PrettyTransport>[0] = {}) {
   const lines: string[] = [];
   const output = {
-    write: vi.fn((chunk: string) => { lines.push(chunk); }),
+    write: vi.fn((chunk: string) => {
+      lines.push(chunk);
+    }),
   } as unknown as NodeJS.WritableStream;
 
   const transport = new PrettyTransport({ colorize: false, output, ...opts });
