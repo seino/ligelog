@@ -29,9 +29,10 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
-      - run: pnpm run test
       - run: pnpm run build
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+      - run: pnpm run test
 
       - name: Publish changed packages
         run: pnpm -r publish --access public --provenance --no-git-checks
