@@ -48,6 +48,18 @@ If you need proven highest-throughput logging under many workloads, benchmark ag
 npm install ligelog
 ```
 
+Add ecosystem packages as needed — each is optional and independently installable:
+
+```sh
+npm install @ligelog/pretty   # colorized dev output
+npm install @ligelog/rotate   # file rotation
+npm install @ligelog/caller   # caller info (file, line, function)
+npm install @ligelog/catch    # automatic error logging wrappers
+npm install @ligelog/sentry   # Sentry integration
+```
+
+See [Ecosystem](#ecosystem) for details.
+
 ---
 
 ## Quick start
