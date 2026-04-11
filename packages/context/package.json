@@ -1,0 +1,59 @@
+{
+  "name": "@ligelog/context",
+  "version": "1.0.0",
+  "description": "AsyncLocalStorage-based context propagation hook for ligelog — automatic field injection across async boundaries",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ligelog",
+    "context",
+    "async-local-storage",
+    "mdc",
+    "logging",
+    "hook",
+    "request-context"
+  ],
+  "author": "Akihiro Seino",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seino/ligelog.git",
+    "directory": "packages/context"
+  },
+  "homepage": "https://github.com/seino/ligelog#ecosystem",
+  "bugs": {
+    "url": "https://github.com/seino/ligelog/issues"
+  },
+  "devDependencies": {
+    "ligelog": "workspace:*"
+  },
+  "peerDependencies": {
+    "ligelog": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
