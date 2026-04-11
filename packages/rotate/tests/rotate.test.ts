@@ -253,7 +253,9 @@ describe('RotateTransport', () => {
 
     await transport.close();
 
-    const files = readdirSync(dir).filter((f) => f !== 'app.log').sort();
+    const files = readdirSync(dir)
+      .filter((f) => f !== 'app.log')
+      .sort();
     expect(files.length).toBeLessThanOrEqual(2);
 
     // The kept files should have the HIGHEST numeric indices
@@ -271,5 +273,103 @@ describe('RotateTransport', () => {
     const transport = new RotateTransport({ path: logPath });
     await expect(transport.flush()).resolves.toBeUndefined();
     await transport.close();
+  });
+
+  it('numeric scheme resumes rotateIndex after restart', async () => {
+    const dir = makeTmpDir();
+    dirs.push(dir);
+    const logPath = join(dir, 'app.log');
+
+    // First run — create app.1.log and app.2.log via manual rotations.
+    const first = new RotateTransport({
+      path: logPath,
+      namingScheme: 'numeric',
+    });
+    first.write('gen-1\n', makeRecord());
+    first.rotate(); // -> app.1.log
+    first.write('gen-2\n', makeRecord());
+    first.rotate(); // -> app.2.log
+    first.write('live\n', makeRecord());
+    await first.close();
+
+    // Pre-conditions: existing generations must be on disk with known contents.
+    expect(readFileSync(join(dir, 'app.1.log'), 'utf8')).toBe('gen-1\n');
+    expect(readFileSync(join(dir, 'app.2.log'), 'utf8')).toBe('gen-2\n');
+
+    // Second run — simulate a process restart. The next rotate() must NOT
+    // overwrite app.1.log / app.2.log; it must create app.3.log.
+    const second = new RotateTransport({
+      path: logPath,
+      namingScheme: 'numeric',
+    });
+    second.write('gen-3\n', makeRecord());
+    second.rotate();
+    second.write('live-after-restart\n', makeRecord());
+    await second.close();
+
+    // Existing generations are untouched.
+    expect(readFileSync(join(dir, 'app.1.log'), 'utf8')).toBe('gen-1\n');
+    expect(readFileSync(join(dir, 'app.2.log'), 'utf8')).toBe('gen-2\n');
+    // New rotation landed on app.3.log.
+    expect(readFileSync(join(dir, 'app.3.log'), 'utf8')).toBe('live\ngen-3\n');
+    // And the live file holds the post-rotation write.
+    expect(readFileSync(logPath, 'utf8')).toBe('live-after-restart\n');
+  });
+
+  it('timestamp scheme rotates twice in the same second without losing files', async () => {
+    const dir = makeTmpDir();
+    dirs.push(dir);
+    const logPath = join(dir, 'app.log');
+
+    const transport = new RotateTransport({
+      path: logPath,
+      namingScheme: 'timestamp',
+    });
+
+    // Two back-to-back manual rotations — on most machines these land in
+    // the same wall-clock millisecond, which used to collide + overwrite
+    // when the timestamp was truncated to seconds precision.
+    transport.write('first\n', makeRecord());
+    transport.rotate();
+    transport.write('second\n', makeRecord());
+    transport.rotate();
+    transport.write('third\n', makeRecord());
+
+    await transport.close();
+
+    const rotated = readdirSync(dir).filter((f) => f !== 'app.log');
+    // Both rotated snapshots must survive — one per rotate() call.
+    expect(rotated.length).toBe(2);
+
+    const contents = rotated.map((f) => readFileSync(join(dir, f), 'utf8')).sort();
+    expect(contents).toEqual(['first\n', 'second\n']);
+
+    // And the live file holds the post-rotation write.
+    expect(readFileSync(logPath, 'utf8')).toBe('third\n');
+  });
+
+  it('timestamp scheme respects maxFiles during burst rotations', async () => {
+    const dir = makeTmpDir();
+    dirs.push(dir);
+    const logPath = join(dir, 'app.log');
+
+    const transport = new RotateTransport({
+      path: logPath,
+      maxFiles: 2,
+      namingScheme: 'timestamp',
+    });
+
+    // Force several rotations in quick succession (same-ms collisions
+    // likely). With ms precision + existsSync fallback, each rotate must
+    // produce a distinct file, and cleanup must cap the total.
+    for (let i = 0; i < 5; i++) {
+      transport.write(`line-${i}\n`, makeRecord());
+      transport.rotate();
+    }
+
+    await transport.close();
+
+    const rotated = readdirSync(dir).filter((f) => f !== 'app.log');
+    expect(rotated.length).toBe(2);
   });
 });
