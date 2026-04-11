@@ -1,0 +1,59 @@
+{
+  "name": "@ligelog/redact",
+  "version": "1.0.0",
+  "description": "PII field masking hook for ligelog — redact sensitive data from log records",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ligelog",
+    "redact",
+    "pii",
+    "gdpr",
+    "masking",
+    "logging",
+    "hook"
+  ],
+  "author": "Akihiro Seino",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seino/ligelog.git",
+    "directory": "packages/redact"
+  },
+  "homepage": "https://github.com/seino/ligelog#ecosystem",
+  "bugs": {
+    "url": "https://github.com/seino/ligelog/issues"
+  },
+  "devDependencies": {
+    "ligelog": "workspace:*"
+  },
+  "peerDependencies": {
+    "ligelog": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
