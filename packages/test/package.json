@@ -1,0 +1,58 @@
+{
+  "name": "@ligelog/test",
+  "version": "1.0.0",
+  "description": "Test utilities for ligelog — CaptureTransport and createTestLogger helper",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ligelog",
+    "test",
+    "testing",
+    "capture",
+    "transport",
+    "logging"
+  ],
+  "author": "Akihiro Seino",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seino/ligelog.git",
+    "directory": "packages/test"
+  },
+  "homepage": "https://github.com/seino/ligelog#ecosystem",
+  "bugs": {
+    "url": "https://github.com/seino/ligelog/issues"
+  },
+  "devDependencies": {
+    "ligelog": "workspace:*"
+  },
+  "peerDependencies": {
+    "ligelog": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
