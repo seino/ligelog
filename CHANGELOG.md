@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-03-21
+## [1.0.0] - 2026-04-08
 
 ### Breaking Changes
 
@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `Logger.emit` now reads from `ctx.record` instead of the original local `record` variable when serializing and dispatching to transports. Previously, an `onBeforeWrite` hook that returned a new record object via the immutable update pattern (e.g. `{ ...ctx, record: maskPii(ctx.record) }`) had its replacement silently discarded, causing PII-masking and other record-rewriting hooks to be no-ops. Hooks that mutated `ctx.record` in place were unaffected. Also shipped as `ligelog@0.1.1` on the 0.1.x line.
 - `FileTransport.flush()` no longer waits forever when no drain is pending.
 - Hook exceptions are isolated so logger calls do not crash application code.
 
