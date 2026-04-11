@@ -13,10 +13,12 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",
     "@types/node": "^25.5.0",
+    "bunyan": "^1.8.15",
     "pino": "^10.3.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vitest": "^1.6.1"
+    "vitest": "^1.6.1",
+    "winston": "^3.19.0"
   },
   "engines": {
     "node": ">=18.0.0"
