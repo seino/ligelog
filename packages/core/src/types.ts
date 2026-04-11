@@ -130,6 +130,31 @@ export interface Transport {
 // Logger options
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// LoggerLike — minimal logger interface for ecosystem packages
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimal logger interface that ecosystem packages (e.g. `@ligelog/http`)
+ * can depend on without importing the full `Logger` class.
+ *
+ * This matches the basic method signatures of `Logger`, making it easy to
+ * pass a ligelog instance anywhere a `LoggerLike` is expected. It also
+ * aligns with pino's core interface, easing migration.
+ */
+export interface LoggerLike {
+  debug(msg: string, fields?: Record<string, unknown>): void;
+  info(msg: string, fields?: Record<string, unknown>): void;
+  warn(msg: string, fields?: Record<string, unknown>): void;
+  error(msg: string, fields?: Record<string, unknown>): void;
+  fatal(msg: string, fields?: Record<string, unknown>): void;
+  child(context: Record<string, unknown>): LoggerLike;
+}
+
+// ---------------------------------------------------------------------------
+// Logger options
+// ---------------------------------------------------------------------------
+
 /** Options accepted by `createLogger()` and the `Logger` constructor. */
 export interface LoggerOptions {
   /**
