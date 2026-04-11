@@ -18,23 +18,17 @@
  * ```
  */
 
-import {
-  LEVELS,
-  type LevelName,
-  type LevelValue,
-  type LoggerOptions,
-  type Hooks,
-} from './types'
-import { serialize }           from './serializer'
-import { AsyncQueue }          from './queue'
-import { runHooks, runAfterWriteHooks, mergeHooks } from './hooks'
+import { LEVELS, type LevelName, type LevelValue, type LoggerOptions, type Hooks } from './types';
+import { serialize } from './serializer';
+import { AsyncQueue } from './queue';
+import { runHooks, runAfterWriteHooks, mergeHooks } from './hooks';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 /** Process ID — falls back to 0 in browser / edge runtimes. */
-const PID: number = typeof process !== 'undefined' ? process.pid : 0
+const PID: number = typeof process !== 'undefined' ? process.pid : 0;
 
 // ---------------------------------------------------------------------------
 // Logger
@@ -54,18 +48,20 @@ const PID: number = typeof process !== 'undefined' ? process.pid : 0
  * serialized into the JSON output.
  */
 export class Logger {
-  private readonly minLevel: LevelValue
-  private readonly context:  Record<string, unknown>
-  private          hooks:    Hooks
-  private readonly queue:    AsyncQueue
-  private readonly onHookError: ((phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void) | undefined
+  private readonly minLevel: LevelValue;
+  private readonly context: Record<string, unknown>;
+  private hooks: Hooks;
+  private readonly queue: AsyncQueue;
+  private readonly onHookError:
+    | ((phase: 'onBeforeWrite' | 'onSerialize' | 'onAfterWrite', error: unknown) => void)
+    | undefined;
 
   constructor(opts: LoggerOptions = {}, queue?: AsyncQueue) {
-    this.minLevel    = LEVELS[opts.level ?? 'info']
-    this.context     = opts.context ?? {}
-    this.hooks       = opts.hooks   ?? {}
-    this.onHookError = opts.onHookError
-    this.queue       = queue ?? new AsyncQueue(opts.transports ?? [], opts.queueSize, opts.onDrop)
+    this.minLevel = LEVELS[opts.level ?? 'info'];
+    this.context = opts.context ?? {};
+    this.hooks = opts.hooks ?? {};
+    this.onHookError = opts.onHookError;
+    this.queue = queue ?? new AsyncQueue(opts.transports ?? [], opts.queueSize, opts.onDrop);
   }
 
   // -------------------------------------------------------------------------
@@ -83,8 +79,8 @@ export class Logger {
    * ```
    */
   use(hooks: Hooks): this {
-    this.hooks = mergeHooks(this.hooks, hooks)
-    return this
+    this.hooks = mergeHooks(this.hooks, hooks);
+    return this;
   }
 
   // -------------------------------------------------------------------------
@@ -93,27 +89,27 @@ export class Logger {
 
   /** Emit a `debug` (level 10) log entry. */
   debug(msg: string, extra?: Record<string, unknown>): void {
-    this.emit('debug', msg, extra)
+    this.emit('debug', msg, extra);
   }
 
   /** Emit an `info` (level 20) log entry. */
   info(msg: string, extra?: Record<string, unknown>): void {
-    this.emit('info', msg, extra)
+    this.emit('info', msg, extra);
   }
 
   /** Emit a `warn` (level 30) log entry. */
   warn(msg: string, extra?: Record<string, unknown>): void {
-    this.emit('warn', msg, extra)
+    this.emit('warn', msg, extra);
   }
 
   /** Emit an `error` (level 40) log entry. */
   error(msg: string, extra?: Record<string, unknown>): void {
-    this.emit('error', msg, extra)
+    this.emit('error', msg, extra);
   }
 
   /** Emit a `fatal` (level 50) log entry. */
   fatal(msg: string, extra?: Record<string, unknown>): void {
-    this.emit('fatal', msg, extra)
+    this.emit('fatal', msg, extra);
   }
 
   // -------------------------------------------------------------------------
@@ -130,13 +126,16 @@ export class Logger {
    * @param ctx - Additional fields to merge into every record.
    */
   child(ctx: Record<string, unknown>): Logger {
-    return new Logger({
-      level:       this.currentLevelName(),
-      context:     { ...this.context, ...ctx },
-      transports:  this.queue.transports,
-      hooks:       mergeHooks(this.hooks, {}),
-      onHookError: this.onHookError,
-    }, this.queue)
+    return new Logger(
+      {
+        level: this.currentLevelName(),
+        context: { ...this.context, ...ctx },
+        transports: this.queue.transports,
+        hooks: mergeHooks(this.hooks, {}),
+        onHookError: this.onHookError,
+      },
+      this.queue
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -153,10 +152,8 @@ export class Logger {
    * ```
    */
   async flush(): Promise<void> {
-    await this.queue.drain()
-    await Promise.all(
-      this.queue.transports.map(t => t.flush?.() ?? Promise.resolve()),
-    )
+    await this.queue.drain();
+    await Promise.all(this.queue.transports.map((t) => t.flush?.() ?? Promise.resolve()));
   }
 
   /**
@@ -166,10 +163,8 @@ export class Logger {
    * on transports that implement it.
    */
   async close(): Promise<void> {
-    await this.flush()
-    await Promise.all(
-      this.queue.transports.map(t => t.close?.() ?? Promise.resolve()),
-    )
+    await this.flush();
+    await Promise.all(this.queue.transports.map((t) => t.close?.() ?? Promise.resolve()));
   }
 
   /**
@@ -178,7 +173,7 @@ export class Logger {
    * or reduce log volume.
    */
   getDropped(): number {
-    return this.queue.getDropped()
+    return this.queue.getDropped();
   }
 
   /**
@@ -186,7 +181,7 @@ export class Logger {
    * Non-zero means one or more transports threw during write.
    */
   getWriteErrors(): number {
-    return this.queue.getWriteErrors()
+    return this.queue.getWriteErrors();
   }
 
   // -------------------------------------------------------------------------
@@ -203,42 +198,36 @@ export class Logger {
    * 5. Enqueue the line for async transport dispatch.
    * 6. Run `onAfterWrite` after enqueue.
    */
-  private emit(
-    lvl:    LevelName,
-    msg:    string,
-    extra?: Record<string, unknown>,
-  ): void {
-    const lv = LEVELS[lvl]
-    if (lv < this.minLevel) return
+  private emit(lvl: LevelName, msg: string, extra?: Record<string, unknown>): void {
+    const lv = LEVELS[lvl];
+    if (lv < this.minLevel) return;
 
     const record = {
       ...this.context,
       ...extra,
-      level: lv   as LevelValue,
+      level: lv as LevelValue,
       lvl,
-      time:  Date.now(),
+      time: Date.now(),
       msg,
-      pid:   PID,
-    }
+      pid: PID,
+    };
 
     // Run hooks; null means the entry was dropped by an onBeforeWrite hook.
     // Hooks may replace `ctx.record` with a new object (immutable update),
     // so downstream serialization and transport dispatch must read from
     // `ctx.record` rather than the original local `record`.
-    const ctx = runHooks(this.hooks, { record }, { skipAfterWrite: true, onHookError: this.onHookError })
-    if (!ctx) return
+    const ctx = runHooks(this.hooks, { record }, { skipAfterWrite: true, onHookError: this.onHookError });
+    if (!ctx) return;
 
     // Use the hook-provided output string, or fall back to the built-in serializer.
-    const line = ctx.output ?? serialize(ctx.record)
+    const line = ctx.output ?? serialize(ctx.record);
 
-    this.queue.enqueue(line, ctx.record)
-    runAfterWriteHooks(this.hooks, ctx, this.onHookError)
+    this.queue.enqueue(line, ctx.record);
+    runAfterWriteHooks(this.hooks, ctx, this.onHookError);
   }
 
   /** Reverse-map the numeric minLevel back to its string name. */
   private currentLevelName(): LevelName {
-    return (Object.keys(LEVELS) as LevelName[]).find(
-      k => LEVELS[k] === this.minLevel,
-    ) ?? 'info'
+    return (Object.keys(LEVELS) as LevelName[]).find((k) => LEVELS[k] === this.minLevel) ?? 'info';
   }
 }

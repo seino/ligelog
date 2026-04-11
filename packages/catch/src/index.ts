@@ -73,9 +73,9 @@ export interface CatchOptions {
 // `any` is intentional here — these aliases must accept arbitrary function
 // signatures so that `catchWith` / `catchAsync` can wrap any user function
 // without forcing callers to satisfy a narrower constraint.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: wrapper must accept arbitrary function signatures
 type AnyFn = (...args: any[]) => any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: wrapper must accept arbitrary async function signatures
 type AsyncFn = (...args: any[]) => Promise<any>;
 
 /** Get a human-readable function name. */
@@ -88,7 +88,7 @@ function buildExtra(
   error: unknown,
   args: unknown[],
   fnName: string,
-  extraFn?: (error: unknown, args: unknown[]) => Record<string, unknown>,
+  extraFn?: (error: unknown, args: unknown[]) => Record<string, unknown>
 ): Record<string, unknown> {
   const base: Record<string, unknown> = { error, fn: fnName };
   if (extraFn) {
@@ -121,26 +121,21 @@ function buildExtra(
 export function catchWith<F extends AnyFn>(
   logger: LoggerLike,
   fn: F,
-  opts?: CatchOptions & { rethrow?: true },
+  opts?: CatchOptions & { rethrow?: true }
 ): (...args: Parameters<F>) => ReturnType<F>;
 
 export function catchWith<F extends AnyFn>(
   logger: LoggerLike,
   fn: F,
-  opts: CatchOptions & { rethrow: false },
+  opts: CatchOptions & { rethrow: false }
 ): (...args: Parameters<F>) => ReturnType<F> | undefined;
 
 export function catchWith<F extends AnyFn>(
   logger: LoggerLike,
   fn: F,
-  opts: CatchOptions = {},
+  opts: CatchOptions = {}
 ): (...args: Parameters<F>) => ReturnType<F> | undefined {
-  const {
-    level = 'error',
-    rethrow = true,
-    message,
-    extra: extraFn,
-  } = opts;
+  const { level = 'error', rethrow = true, message, extra: extraFn } = opts;
 
   const fnName = getFnName(fn);
   const msg = message ?? `Caught exception in ${fnName}`;
@@ -177,26 +172,21 @@ export function catchWith<F extends AnyFn>(
 export function catchAsync<F extends AsyncFn>(
   logger: LoggerLike,
   fn: F,
-  opts?: CatchOptions & { rethrow?: true },
+  opts?: CatchOptions & { rethrow?: true }
 ): (...args: Parameters<F>) => ReturnType<F>;
 
 export function catchAsync<F extends AsyncFn>(
   logger: LoggerLike,
   fn: F,
-  opts: CatchOptions & { rethrow: false },
+  opts: CatchOptions & { rethrow: false }
 ): (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>> | undefined>;
 
 export function catchAsync<F extends AsyncFn>(
   logger: LoggerLike,
   fn: F,
-  opts: CatchOptions = {},
+  opts: CatchOptions = {}
 ): (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>> | undefined> {
-  const {
-    level = 'error',
-    rethrow = true,
-    message,
-    extra: extraFn,
-  } = opts;
+  const { level = 'error', rethrow = true, message, extra: extraFn } = opts;
 
   const fnName = getFnName(fn);
   const msg = message ?? `Caught exception in ${fnName}`;

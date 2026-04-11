@@ -10,9 +10,9 @@
  * `logrotate` (Linux) or `rotating-file-stream` (Node.js).
  */
 
-import { createWriteStream, mkdirSync, type WriteStream } from 'node:fs'
-import { dirname } from 'node:path'
-import type { Transport } from '../types'
+import { createWriteStream, mkdirSync, type WriteStream } from 'node:fs';
+import { dirname } from 'node:path';
+import type { Transport } from '../types';
 
 /** Options for `FileTransport`. */
 export interface FileTransportOptions {
@@ -22,7 +22,7 @@ export interface FileTransportOptions {
    *
    * @example './logs/app.log'
    */
-  path: string
+  path: string;
 }
 
 /**
@@ -38,12 +38,12 @@ export interface FileTransportOptions {
  * ```
  */
 export class FileTransport implements Transport {
-  private readonly stream: WriteStream
+  private readonly stream: WriteStream;
 
   constructor({ path }: FileTransportOptions) {
     // Ensure parent directory exists before opening the stream.
-    mkdirSync(dirname(path), { recursive: true })
-    this.stream = createWriteStream(path, { flags: 'a', encoding: 'utf8' })
+    mkdirSync(dirname(path), { recursive: true });
+    this.stream = createWriteStream(path, { flags: 'a', encoding: 'utf8' });
   }
 
   /**
@@ -51,7 +51,7 @@ export class FileTransport implements Transport {
    * Delegates to the stream's internal buffer — non-blocking.
    */
   write(line: string): void {
-    this.stream.write(line)
+    this.stream.write(line);
   }
 
   /**
@@ -60,16 +60,16 @@ export class FileTransport implements Transport {
    */
   flush(): Promise<void> {
     if (!this.stream.writable || this.stream.writableEnded || this.stream.destroyed) {
-      return Promise.resolve()
+      return Promise.resolve();
     }
     if (!this.stream.writableNeedDrain) {
-      return Promise.resolve()
+      return Promise.resolve();
     }
-    return new Promise(resolve => this.stream.once('drain', resolve))
+    return new Promise((resolve) => this.stream.once('drain', resolve));
   }
 
   /** End the stream and release the file descriptor. */
   close(): Promise<void> {
-    return new Promise(resolve => this.stream.end(resolve))
+    return new Promise((resolve) => this.stream.end(resolve));
   }
 }

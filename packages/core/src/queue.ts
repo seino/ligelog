@@ -12,20 +12,20 @@
  * starving other microtask-scheduled work (e.g. Promise continuations).
  */
 
-import type { Transport, LogRecord } from './types'
+import type { Transport, LogRecord } from './types';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 /** Default ring buffer capacity. Must be a power of 2. */
-const DEFAULT_SIZE = 8192
+const DEFAULT_SIZE = 8192;
 
 /**
  * Maximum entries drained per microtask tick.
  * Prevents the flush loop from monopolizing the microtask queue.
  */
-const TICK_LIMIT = 512
+const TICK_LIMIT = 512;
 
 // ---------------------------------------------------------------------------
 // Internal entry shape
@@ -33,9 +33,9 @@ const TICK_LIMIT = 512
 
 interface QueueEntry {
   /** Serialized NDJSON line ready to hand to transports. */
-  line:   string
+  line: string;
   /** Original record — passed to `transport.write` for level-based routing. */
-  record: LogRecord
+  record: LogRecord;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,27 +54,27 @@ interface QueueEntry {
  * ```
  */
 export class AsyncQueue {
-  private readonly buf: QueueEntry[]
-  private readonly mask: number
-  private          head    = 0      // write cursor
-  private          tail    = 0      // read cursor
-  private          running = false  // true while a flush tick is scheduled
-  private          dropped = 0      // total entries discarded due to back-pressure
-  private          writeErrors = 0  // total transport write failures
-  private readonly drainWaiters: Array<() => void> = []
-  private readonly onDrop: ((dropped: number) => void) | undefined
+  private readonly buf: QueueEntry[];
+  private readonly mask: number;
+  private head = 0; // write cursor
+  private tail = 0; // read cursor
+  private running = false; // true while a flush tick is scheduled
+  private dropped = 0; // total entries discarded due to back-pressure
+  private writeErrors = 0; // total transport write failures
+  private readonly drainWaiters: Array<() => void> = [];
+  private readonly onDrop: ((dropped: number) => void) | undefined;
 
   /** Transports are exposed so child loggers can share the same queue. */
-  readonly transports: Transport[]
+  readonly transports: Transport[];
 
   constructor(transports: Transport[], size = DEFAULT_SIZE, onDrop?: ((dropped: number) => void) | undefined) {
     if (!Number.isInteger(size) || size < 2 || (size & (size - 1)) !== 0) {
-      throw new Error('AsyncQueue size must be a power of 2 and >= 2')
+      throw new Error('AsyncQueue size must be a power of 2 and >= 2');
     }
-    this.buf = new Array<QueueEntry>(size)
-    this.mask = size - 1
-    this.transports = transports
-    this.onDrop = onDrop
+    this.buf = new Array<QueueEntry>(size);
+    this.mask = size - 1;
+    this.transports = transports;
+    this.onDrop = onDrop;
   }
 
   // -------------------------------------------------------------------------
@@ -90,16 +90,16 @@ export class AsyncQueue {
    * @param record - Original `LogRecord` forwarded to transports.
    */
   enqueue(line: string, record: LogRecord): void {
-    const next = (this.head + 1) & this.mask
+    const next = (this.head + 1) & this.mask;
     if (next === this.tail) {
       // Ring buffer full — drop and count.
-      this.dropped++
-      this.onDrop?.(this.dropped)
-      return
+      this.dropped++;
+      this.onDrop?.(this.dropped);
+      return;
     }
-    this.buf[this.head] = { line, record }
-    this.head = next
-    if (!this.running) this.schedule()
+    this.buf[this.head] = { line, record };
+    this.head = next;
+    if (!this.running) this.schedule();
   }
 
   /**
@@ -107,8 +107,8 @@ export class AsyncQueue {
    * Safe to call from `process.on('beforeExit', ...)` for graceful shutdown.
    */
   drain(): Promise<void> {
-    if (this.tail === this.head) return Promise.resolve()
-    return new Promise(resolve => this.drainWaiters.push(resolve))
+    if (this.tail === this.head) return Promise.resolve();
+    return new Promise((resolve) => this.drainWaiters.push(resolve));
   }
 
   /**
@@ -117,12 +117,12 @@ export class AsyncQueue {
    * transports or raising `queueSize`.
    */
   getDropped(): number {
-    return this.dropped
+    return this.dropped;
   }
 
   /** Total number of transport write failures observed by the queue. */
   getWriteErrors(): number {
-    return this.writeErrors
+    return this.writeErrors;
   }
 
   // -------------------------------------------------------------------------
@@ -131,8 +131,8 @@ export class AsyncQueue {
 
   /** Schedule the next flush tick via `queueMicrotask`. */
   private schedule(): void {
-    this.running = true
-    queueMicrotask(() => this.tick())
+    this.running = true;
+    queueMicrotask(() => this.tick());
   }
 
   /**
@@ -140,31 +140,34 @@ export class AsyncQueue {
    * If entries remain, re-schedules itself to avoid starving other microtasks.
    */
   private tick(): void {
-    let n = 0
+    let n = 0;
     while (this.tail !== this.head && n++ < TICK_LIMIT) {
-      const entry = this.buf[this.tail]
-      if (!entry) { this.tail = (this.tail + 1) & this.mask; continue }
-      const { line, record } = entry
-      this.buf[this.tail] = undefined as unknown as QueueEntry
-      this.tail = (this.tail + 1) & this.mask
+      const entry = this.buf[this.tail];
+      if (!entry) {
+        this.tail = (this.tail + 1) & this.mask;
+        continue;
+      }
+      const { line, record } = entry;
+      this.buf[this.tail] = undefined as unknown as QueueEntry;
+      this.tail = (this.tail + 1) & this.mask;
       for (const t of this.transports) {
         try {
-          t.write(line, record)
+          t.write(line, record);
         } catch {
           // A failing transport must not stall the queue.
-          this.writeErrors++
+          this.writeErrors++;
         }
       }
     }
 
     if (this.tail !== this.head) {
       // More entries waiting — yield and continue.
-      queueMicrotask(() => this.tick())
+      queueMicrotask(() => this.tick());
     } else {
-      this.running = false
+      this.running = false;
       if (this.drainWaiters.length) {
-        const waiters = this.drainWaiters.splice(0, this.drainWaiters.length)
-        for (const resolve of waiters) resolve()
+        const waiters = this.drainWaiters.splice(0, this.drainWaiters.length);
+        for (const resolve of waiters) resolve();
       }
     }
   }

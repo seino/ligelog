@@ -36,20 +36,21 @@ describe('catchWith', () => {
 
   it('logs and rethrows by default', () => {
     const logger = makeLogger();
-    const boom = () => { throw new Error('boom'); };
+    const boom = () => {
+      throw new Error('boom');
+    };
     const safe = catchWith(logger, boom);
 
     expect(() => safe()).toThrow('boom');
     expect(logger.error).toHaveBeenCalledOnce();
-    expect(logger.error).toHaveBeenCalledWith(
-      'Caught exception in boom',
-      expect.objectContaining({ fn: 'boom' }),
-    );
+    expect(logger.error).toHaveBeenCalledWith('Caught exception in boom', expect.objectContaining({ fn: 'boom' }));
   });
 
   it('swallows error and returns undefined when rethrow: false', () => {
     const logger = makeLogger();
-    const boom = () => { throw new Error('fail'); };
+    const boom = () => {
+      throw new Error('fail');
+    };
     const safe = catchWith(logger, boom, { rethrow: false });
 
     expect(safe()).toBeUndefined();
@@ -58,7 +59,9 @@ describe('catchWith', () => {
 
   it('uses custom level', () => {
     const logger = makeLogger();
-    const boom = () => { throw new Error('x'); };
+    const boom = () => {
+      throw new Error('x');
+    };
     const safe = catchWith(logger, boom, { level: 'fatal', rethrow: false });
 
     safe();
@@ -68,36 +71,36 @@ describe('catchWith', () => {
 
   it('uses custom message', () => {
     const logger = makeLogger();
-    const boom = () => { throw new Error('x'); };
+    const boom = () => {
+      throw new Error('x');
+    };
     const safe = catchWith(logger, boom, { message: 'Custom msg', rethrow: false });
 
     safe();
-    expect(logger.error).toHaveBeenCalledWith(
-      'Custom msg',
-      expect.any(Object),
-    );
+    expect(logger.error).toHaveBeenCalledWith('Custom msg', expect.any(Object));
   });
 
   it('includes extra context from extra function', () => {
     const logger = makeLogger();
-    const boom = (id: string) => { throw new Error('not found'); };
+    const boom = (_id: string) => {
+      throw new Error('not found');
+    };
     const safe = catchWith(logger, boom, {
       rethrow: false,
       extra: (_err, args) => ({ id: args[0] }),
     });
 
     safe('user-123');
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ id: 'user-123' }),
-    );
+    expect(logger.error).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ id: 'user-123' }));
   });
 
   it('preserves this context', () => {
     const logger = makeLogger();
     const obj = {
       value: 42,
-      getValue(this: { value: number }) { return this.value; },
+      getValue(this: { value: number }) {
+        return this.value;
+      },
     };
     const safe = catchWith(logger, obj.getValue);
 
@@ -106,13 +109,16 @@ describe('catchWith', () => {
 
   it('handles anonymous functions', () => {
     const logger = makeLogger();
-    const safe = catchWith(logger, () => { throw new Error('anon'); }, { rethrow: false });
+    const safe = catchWith(
+      logger,
+      () => {
+        throw new Error('anon');
+      },
+      { rethrow: false }
+    );
 
     safe();
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Caught exception'),
-      expect.any(Object),
-    );
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Caught exception'), expect.any(Object));
   });
 });
 
@@ -133,7 +139,9 @@ describe('catchAsync', () => {
 
   it('logs and rethrows rejected promises by default', async () => {
     const logger = makeLogger();
-    const boom = async () => { throw new Error('async boom'); };
+    const boom = async () => {
+      throw new Error('async boom');
+    };
     const safe = catchAsync(logger, boom);
 
     await expect(safe()).rejects.toThrow('async boom');
@@ -142,7 +150,9 @@ describe('catchAsync', () => {
 
   it('swallows rejection and returns undefined when rethrow: false', async () => {
     const logger = makeLogger();
-    const boom = async () => { throw new Error('async fail'); };
+    const boom = async () => {
+      throw new Error('async fail');
+    };
     const safe = catchAsync(logger, boom, { rethrow: false });
 
     const result = await safe();
@@ -152,7 +162,9 @@ describe('catchAsync', () => {
 
   it('uses custom level for async errors', async () => {
     const logger = makeLogger();
-    const boom = async () => { throw new Error('x'); };
+    const boom = async () => {
+      throw new Error('x');
+    };
     const safe = catchAsync(logger, boom, { level: 'warn', rethrow: false });
 
     await safe();
@@ -161,24 +173,25 @@ describe('catchAsync', () => {
 
   it('includes extra context from extra function', async () => {
     const logger = makeLogger();
-    const boom = async (url: string) => { throw new Error('fetch failed'); };
+    const boom = async (_url: string) => {
+      throw new Error('fetch failed');
+    };
     const safe = catchAsync(logger, boom, {
       rethrow: false,
       extra: (_err, args) => ({ url: args[0] }),
     });
 
     await safe('/api/users');
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ url: '/api/users' }),
-    );
+    expect(logger.error).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ url: '/api/users' }));
   });
 
   it('preserves this context for async methods', async () => {
     const logger = makeLogger();
     const obj = {
       value: 99,
-      async getValue(this: { value: number }) { return this.value; },
+      async getValue(this: { value: number }) {
+        return this.value;
+      },
     };
     const safe = catchAsync(logger, obj.getValue);
 

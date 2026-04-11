@@ -71,9 +71,7 @@ const INTERNAL_PATTERNS = [
 ];
 
 /** Parse the first external caller frame from a captured stack trace. */
-function parseCallerFrame(
-  stackOffset: number,
-): { file: string; line: number; fn: string } | null {
+function parseCallerFrame(stackOffset: number): { file: string; line: number; fn: string } | null {
   const holder: { stack?: string } = {};
   const originalLimit = Error.stackTraceLimit;
   Error.stackTraceLimit = 15;
@@ -101,9 +99,7 @@ function parseCallerFrame(
 }
 
 /** Parse a single V8 stack frame line into file, line, and function name. */
-function parseFrameLine(
-  frame: string,
-): { file: string; line: number; fn: string } | null {
+function parseFrameLine(frame: string): { file: string; line: number; fn: string } | null {
   // Normalize ESM `file:///` protocol
   const normalized = frame.replace(/file:\/\/\//g, '/');
 
@@ -172,11 +168,7 @@ function formatPath(filePath: string, style: 'full' | 'basename' | 'relative'): 
  * ```
  */
 export function createCallerHook(opts: CallerHookOptions = {}): Hooks {
-  const {
-    minLevel = 'debug',
-    stackOffset = 0,
-    pathStyle = 'basename',
-  } = opts;
+  const { minLevel = 'debug', stackOffset = 0, pathStyle = 'basename' } = opts;
 
   const threshold = LEVELS[minLevel] ?? LEVELS.debug;
 

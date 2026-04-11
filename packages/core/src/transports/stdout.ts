@@ -11,7 +11,7 @@
  * a remote endpoint.
  */
 
-import type { Transport } from '../types'
+import type { Transport } from '../types';
 
 /**
  * Writes each log line to `process.stdout` via a single synchronous call.
@@ -29,6 +29,6 @@ export class StdoutTransport implements Transport {
    * The trailing newline is already included in `line` by the serializer.
    */
   write(line: string): void {
-    process.stdout.write(line)
+    process.stdout.write(line);
   }
 }
