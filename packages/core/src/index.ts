@@ -30,6 +30,7 @@ export type {
   SerializeHook,
   AfterWriteHook,
   LoggerOptions,
+  LoggerLike,
 } from './types';
 
 export type { FileTransportOptions } from './transports/file';
