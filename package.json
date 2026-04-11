@@ -3,11 +3,15 @@
   "scripts": {
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
-    "lint": "pnpm -r run lint",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "pnpm -r run typecheck",
     "bench": "pnpm --filter ligelog run build && node --expose-gc bench/index.js",
     "bench:compare": "pnpm run bench"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.10",
     "@types/node": "^25.5.0",
     "pino": "^10.3.1",
     "tsup": "^8.5.1",

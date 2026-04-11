@@ -1,0 +1,75 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": ["**", "!**/dist", "!**/node_modules", "!**/*.d.ts", "!**/*.d.cts", "!pnpm-lock.yaml", "!bench"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "es5",
+      "arrowParentheses": "always",
+      "bracketSpacing": true
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true,
+      "indentWidth": 2
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "off",
+        "useNodejsImportProtocol": "error",
+        "useTemplate": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noAssignInExpressions": "warn"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "noBannedTypes": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "error"
+      },
+      "performance": {
+        "noDelete": "off"
+      }
+    }
+  },
+  "assist": {
+    "enabled": false
+  },
+  "overrides": [
+    {
+      "includes": ["**/tests/**", "**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ]
+}
