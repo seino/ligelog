@@ -28,6 +28,7 @@
 
 import {
   closeSync,
+  existsSync,
   mkdirSync,
   openSync,
   statSync,
@@ -130,12 +131,16 @@ function getPeriodStart(time: number, interval: RotateInterval): number {
   }
 }
 
-/** Generate a rotated file name. */
-function rotatedName(
-  basePath: string,
-  scheme: 'timestamp' | 'numeric',
-  index: number,
-): string {
+/**
+ * Generate a rotated file name.
+ *
+ * For timestamp scheme, millisecond precision is used to avoid collisions
+ * when multiple rotations happen inside the same second. As an extra
+ * safeguard (clock resolution quirks, manual rotate bursts), if the
+ * candidate path already exists, an incrementing `-N` suffix is appended
+ * until a free name is found.
+ */
+function rotatedName(basePath: string, scheme: 'timestamp' | 'numeric', index: number): string {
   const dir = dirname(basePath);
   const ext = extname(basePath);
   const base = basename(basePath, ext);
@@ -144,10 +149,17 @@ function rotatedName(
     return join(dir, `${base}.${index}${ext}`);
   }
 
-  // timestamp scheme
+  // timestamp scheme — millisecond precision: "2026-04-08T20-27-16-123"
   const now = new Date();
-  const ts = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  return join(dir, `${base}.${ts}${ext}`);
+  const ts = now.toISOString().replace(/[:.]/g, '-').slice(0, 23);
+
+  let candidate = join(dir, `${base}.${ts}${ext}`);
+  let suffix = 0;
+  while (existsSync(candidate)) {
+    suffix += 1;
+    candidate = join(dir, `${base}.${ts}-${suffix}${ext}`);
+  }
+  return candidate;
 }
 
 /** Check if a file name matches the rotated file pattern. */
@@ -162,29 +174,50 @@ function isRotatedFile(fileName: string, basePath: string): boolean {
 /**
  * Extract the numeric index from a rotated file name (e.g. `app.12.log` → 12).
  * Returns `NaN` for non-numeric names (timestamp scheme).
+ *
+ * We validate the entire middle segment is digits — `parseInt` alone would
+ * happily convert `"2026-04-08T..."` to `2026` and collapse every
+ * timestamp-named file into a single year bucket when sorting.
  */
 function extractNumericIndex(fileName: string, basePath: string): number {
   const ext = extname(basePath);
   const base = basename(basePath, ext);
   const middle = fileName.slice(base.length + 1, fileName.length - ext.length);
+  if (!/^\d+$/.test(middle)) return NaN;
   return parseInt(middle, 10);
 }
 
 /**
  * Sort rotated file names in ascending order (oldest first).
- * Numeric names are sorted by index; timestamp names by lexicographic order.
+ *
+ * Files are partitioned by naming scheme so comparisons only happen between
+ * like kinds — numeric files are sorted by their parsed index, timestamp
+ * files by lexicographic (= chronological) order. If both kinds coexist
+ * (e.g. the user changed `namingScheme` mid-deployment), the *stale* scheme
+ * is emitted first so cleanup evicts leftover files from the previous
+ * configuration before touching the current generation.
  */
-function sortRotatedFiles(files: string[], basePath: string): string[] {
-  return files.sort((a, b) => {
-    const idxA = extractNumericIndex(a, basePath);
-    const idxB = extractNumericIndex(b, basePath);
+function sortRotatedFiles(files: string[], basePath: string, currentScheme: 'timestamp' | 'numeric'): string[] {
+  const numeric: Array<{ name: string; idx: number }> = [];
+  const timestamp: string[] = [];
 
-    // Both numeric — sort by index
-    if (!isNaN(idxA) && !isNaN(idxB)) return idxA - idxB;
+  for (const f of files) {
+    const idx = extractNumericIndex(f, basePath);
+    if (!Number.isNaN(idx)) {
+      numeric.push({ name: f, idx });
+    } else {
+      timestamp.push(f);
+    }
+  }
 
-    // Fallback to lexicographic (works for ISO timestamp names)
-    return a.localeCompare(b);
-  });
+  numeric.sort((a, b) => a.idx - b.idx);
+  timestamp.sort((a, b) => a.localeCompare(b));
+
+  const numericNames = numeric.map((n) => n.name);
+
+  // Stale scheme first → current scheme last, so current-scheme files are
+  // the ones kept when cleanup trims to `maxFiles`.
+  return currentScheme === 'numeric' ? [...timestamp, ...numericNames] : [...numericNames, ...timestamp];
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +282,22 @@ export class RotateTransport implements Transport {
     } catch {
       // File does not exist yet — start with zero size.
       this.currentSize = 0;
+    }
+
+    // Restart-safe: resume numeric rotation from the highest existing index
+    // so a fresh process does not overwrite previous generations.
+    if (this.namingScheme === 'numeric') {
+      try {
+        const existing = readdirSync(dirname(this.basePath))
+          .filter((f) => isRotatedFile(f, this.basePath))
+          .map((f) => extractNumericIndex(f, this.basePath))
+          .filter((n) => !Number.isNaN(n));
+        if (existing.length > 0) {
+          this.rotateIndex = Math.max(...existing);
+        }
+      } catch {
+        // Directory unreadable — fall back to index 0.
+      }
     }
 
     // Set on first write so period tracking aligns with actual log timestamps
@@ -326,6 +375,7 @@ export class RotateTransport implements Transport {
       files = sortRotatedFiles(
         readdirSync(dir).filter((f) => isRotatedFile(f, this.basePath)),
         this.basePath,
+        this.namingScheme
       );
     } catch {
       // Directory may have been removed externally — nothing to clean up.
