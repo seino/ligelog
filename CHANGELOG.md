@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-14
+
+### Features
+
+- Added `LoggerLike` interface to core — enables extension packages to accept any logger-compatible object without depending on the concrete `Logger` class.
+- Added `ligelog/serializer` subpath export — allows extension packages to reuse the core NDJSON serializer.
+
+### New Packages
+
+- **`@ligelog/test`** — `CaptureTransport` and assertion helpers (`assertLoggedAt`, `assertLoggedWith`, `assertNeverLogged`) for testing ligelog-based code without real I/O.
+- **`@ligelog/redact`** — PII field masking hook. Supports glob patterns, nested key paths, and custom mask characters.
+- **`@ligelog/http`** — Express and Hono request logging middleware. Auto-logs method, path, status, and duration with configurable log levels.
+- **`@ligelog/sampling`** — Log volume reduction hook with rate-based and count-based sampling strategies.
+- **`@ligelog/context`** — AsyncLocalStorage-based context propagation. Automatically attaches request-scoped fields (e.g. `requestId`, `userId`) to every log record.
+
+### Benchmarks
+
+- Expanded benchmark suite with winston and bunyan comparisons.
+- Added GitHub Actions CI workflow for benchmarks.
+
 ## [1.0.0] - 2026-04-08
 
 ### Breaking Changes
