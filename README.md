@@ -129,6 +129,10 @@ Optional tuning knobs:
 BENCH_ITERATIONS=500000 BENCH_WARMUP=50000 BENCH_FLUSH_EVERY=1000 npm run bench:compare
 ```
 
+> **Note:** These are micro-benchmarks measuring single-operation throughput.
+> They do not guarantee production performance under real workloads.
+> Always re-measure under production-like conditions (concurrency, payload size, transport mix) before making performance claims.
+
 ---
 
 ## Serialization behavior
