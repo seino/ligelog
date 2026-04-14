@@ -129,9 +129,8 @@ Optional tuning knobs:
 BENCH_ITERATIONS=500000 BENCH_WARMUP=50000 BENCH_FLUSH_EVERY=1000 npm run bench:compare
 ```
 
-> **Note:** These are micro-benchmarks measuring single-operation throughput.
-> They do not guarantee production performance under real workloads.
-> Always re-measure under production-like conditions (concurrency, payload size, transport mix) before making performance claims.
+> Benchmarks are run to monitor performance regressions across ligelog versions, not to claim superiority over other loggers.
+> Results depend heavily on workload, I/O, and runtime environment. We recommend re-measuring under your own production conditions before making adoption decisions.
 
 ---
 
@@ -225,9 +224,28 @@ ligelog uses an ecosystem architecture. The core package stays small and fast, w
 | [`ligelog`](./packages/core) | Core logger — zero dependencies |
 | [`@ligelog/caller`](./packages/caller) | Auto-attach caller file, line, and function name |
 | [`@ligelog/catch`](./packages/catch) | Wrap functions with automatic error logging |
+| [`@ligelog/context`](./packages/context) | AsyncLocalStorage-based context propagation |
+| [`@ligelog/http`](./packages/http) | Express and Hono request logging middleware |
 | [`@ligelog/pretty`](./packages/pretty) | Colorized human-readable output for development |
+| [`@ligelog/redact`](./packages/redact) | PII field masking with glob patterns |
 | [`@ligelog/rotate`](./packages/rotate) | Size and time-based log file rotation |
+| [`@ligelog/sampling`](./packages/sampling) | Log volume reduction (rate/count-based) |
 | [`@ligelog/sentry`](./packages/sentry) | Sentry integration via `onAfterWrite` hook |
+| [`@ligelog/test`](./packages/test) | CaptureTransport and assertion helpers for testing |
+
+### Common combinations
+
+Pick the packages that match your use case:
+
+| Use case | Packages |
+|----------|----------|
+| **Development** | `ligelog` + `@ligelog/pretty` + `@ligelog/caller` |
+| **Express production** | `ligelog` + `@ligelog/http` + `@ligelog/redact` + `@ligelog/context` |
+| **Hono / Edge** | `ligelog` + `@ligelog/http` + `@ligelog/redact` |
+| **High-traffic service** | Add `@ligelog/sampling` to any of the above |
+| **Testing** | `@ligelog/test` in devDependencies |
+
+See [Express production recipe](./docs/recipes/express-production.md) and [Hono production recipe](./docs/recipes/hono-production.md) for complete working examples.
 
 ### Caller info
 
@@ -410,6 +428,8 @@ Returns the number of transport write failures observed by the async queue.
 
 - [Architecture](./docs/architecture.md)
 - [Benchmarks](./docs/benchmarks.md)
+- [Recipe: Express production logging](./docs/recipes/express-production.md)
+- [Recipe: Hono production logging](./docs/recipes/hono-production.md)
 - [Recipe: Sentry integration](./docs/recipes/sentry.md)
 - [Recipe: graceful shutdown](./docs/recipes/production-shutdown.md)
 
